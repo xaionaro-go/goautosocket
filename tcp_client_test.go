@@ -12,6 +12,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -123,6 +124,7 @@ func TestTCPClient_Write(t *testing.T) {
 	}
 
 	// shut down and boot up the server randomly
+	var done int32 = 0
 	var swg sync.WaitGroup
 	swg.Add(1)
 	go func() {
@@ -140,6 +142,7 @@ func TestTCPClient_Write(t *testing.T) {
 				s, err = net.Listen("tcp", addr.String())
 			}
 		}
+		atomic.StoreInt32(&done, 1)
 	}()
 
 	// clients concurrently writes to the server
@@ -149,7 +152,7 @@ func TestTCPClient_Write(t *testing.T) {
 		go func(ii int, cc net.Conn) {
 			str := []byte("hello, world!")
 			defer cwg.Done()
-			for {
+			for atomic.LoadInt32(&done) != 1 {
 				if _, err := cc.Write(str); err != nil {
 					switch e := err.(type) {
 					case Error:
@@ -203,6 +206,7 @@ func TestTCPClient_Read(t *testing.T) {
 	}
 
 	// shut down and boot up the server randomly
+	var done int32 = 0
 	var swg sync.WaitGroup
 	swg.Add(1)
 	go func() {
@@ -220,6 +224,7 @@ func TestTCPClient_Read(t *testing.T) {
 				s, err = net.Listen("tcp", addr.String())
 			}
 		}
+		atomic.StoreInt32(&done, 1)
 	}()
 
 	// clients concurrently reads from the server
@@ -230,7 +235,7 @@ func TestTCPClient_Read(t *testing.T) {
 			str := []byte("hello, world!")
 			b := make([]byte, len(str))
 			defer cwg.Done()
-			for {
+			for atomic.LoadInt32(&done) != 1 {
 				if _, err := cc.Read(b); err != nil {
 					switch e := err.(type) {
 					case Error:
