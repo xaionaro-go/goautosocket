@@ -177,50 +177,41 @@ func (c *TCPClient) reconnect() error {
 //
 // It will return ErrMaxRetries if the retry limit is reached.
 func (c *TCPClient) Read(b []byte) (int, error) {
-	disconnected := false
+	// protect conf values (retryInterval, maxRetries...)
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 
-	t := c.retryInterval
 	for i := 0; i < c.maxRetries; i++ {
-		if disconnected {
-			time.Sleep(t)
-			t *= 2
-			if err := c.reconnect(); err != nil {
-				switch e := err.(type) {
-				case *net.OpError:
-					if e.Err.(syscall.Errno) == syscall.ECONNREFUSED {
-						disconnected = true
-						continue
-					}
-					return -1, err
-				default:
-					return -1, err
+		if atomic.LoadInt32(&c.status) == statusOnline {
+			n, err := c.TCPConn.Read(b)
+			if err == nil {
+				return n, err
+			}
+			switch e := err.(type) {
+			case *net.OpError:
+				if e.Err.(syscall.Errno) == syscall.ECONNRESET ||
+					e.Err.(syscall.Errno) == syscall.EPIPE {
+					atomic.StoreInt32(&c.status, statusOffline)
+				} else {
+					return n, err
 				}
-			} else {
-				disconnected = false
+			default:
+				if err.Error() == "EOF" {
+					atomic.StoreInt32(&c.status, statusOffline)
+				} else {
+					return n, err
+				}
+			}
+		} else if atomic.LoadInt32(&c.status) == statusOffline {
+			if err := c.reconnect(); err != nil {
+				return -1, err
 			}
 		}
-		c.lock.RLock()
-		n, err := c.TCPConn.Read(b)
-		c.lock.RUnlock()
-		if err == nil {
-			return n, err
+
+		// exponential backoff
+		if i < (c.maxRetries - 1) {
+			time.Sleep(c.retryInterval * time.Duration(2^(i)))
 		}
-		switch e := err.(type) {
-		case *net.OpError:
-			if e.Err.(syscall.Errno) == syscall.ECONNRESET ||
-				e.Err.(syscall.Errno) == syscall.EPIPE {
-				disconnected = true
-			} else {
-				return n, err
-			}
-		default:
-			if err.Error() == "EOF" {
-				disconnected = true
-			} else {
-				return n, err
-			}
-		}
-		t *= 2
 	}
 
 	return -1, ErrMaxRetries
@@ -230,50 +221,41 @@ func (c *TCPClient) Read(b []byte) (int, error) {
 //
 // It will return ErrMaxRetries if the retry limit is reached.
 func (c *TCPClient) ReadFrom(r io.Reader) (int64, error) {
-	disconnected := false
+	// protect conf values (retryInterval, maxRetries...)
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 
-	t := c.retryInterval
 	for i := 0; i < c.maxRetries; i++ {
-		if disconnected {
-			time.Sleep(t)
-			t *= 2
-			if err := c.reconnect(); err != nil {
-				switch e := err.(type) {
-				case *net.OpError:
-					if e.Err.(syscall.Errno) == syscall.ECONNREFUSED {
-						disconnected = true
-						continue
-					}
-					return -1, err
-				default:
-					return -1, err
+		if atomic.LoadInt32(&c.status) == statusOnline {
+			n, err := c.TCPConn.ReadFrom(r)
+			if err == nil {
+				return n, err
+			}
+			switch e := err.(type) {
+			case *net.OpError:
+				if e.Err.(syscall.Errno) == syscall.ECONNRESET ||
+					e.Err.(syscall.Errno) == syscall.EPIPE {
+					atomic.StoreInt32(&c.status, statusOffline)
+				} else {
+					return n, err
 				}
-			} else {
-				disconnected = false
+			default:
+				if err.Error() == "EOF" {
+					atomic.StoreInt32(&c.status, statusOffline)
+				} else {
+					return n, err
+				}
+			}
+		} else if atomic.LoadInt32(&c.status) == statusOffline {
+			if err := c.reconnect(); err != nil {
+				return -1, err
 			}
 		}
-		c.lock.RLock()
-		n, err := c.TCPConn.ReadFrom(r)
-		c.lock.RUnlock()
-		if err == nil {
-			return n, err
+
+		// exponential backoff
+		if i < (c.maxRetries - 1) {
+			time.Sleep(c.retryInterval * time.Duration(2^(i)))
 		}
-		switch e := err.(type) {
-		case *net.OpError:
-			if e.Err.(syscall.Errno) == syscall.ECONNRESET ||
-				e.Err.(syscall.Errno) == syscall.EPIPE {
-				disconnected = true
-			} else {
-				return n, err
-			}
-		default:
-			if err.Error() == "EOF" {
-				disconnected = true
-			} else {
-				return n, err
-			}
-		}
-		t *= 2
 	}
 
 	return -1, ErrMaxRetries

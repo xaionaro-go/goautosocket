@@ -188,7 +188,7 @@ func TestTCPClient_Read(t *testing.T) {
 	// save the original port
 	addr := s.Addr()
 
-	nbClients := 10
+	nbClients := 100
 	// connect nbClients clients to the server
 	clients := make([]net.Conn, nbClients)
 	for i := 0; i < len(clients); i++ {
@@ -196,7 +196,7 @@ func TestTCPClient_Read(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		c.(*TCPClient).SetMaxRetries(5)
+		c.(*TCPClient).SetMaxRetries(30)
 		c.(*TCPClient).SetRetryInterval(10 * time.Millisecond)
 		defer c.Close()
 		clients[i] = c
