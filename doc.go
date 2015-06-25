@@ -13,6 +13,13 @@ with the `net.Conn` interface and the rest of the `net` package.
 This means you should be able to use this library by just
 replacing `net.Dial` with `gas.Dial` in your code.
 
+GAS uses the `atomic` package to synchronize reconnections between
+multiple goroutines; it doesn't add any extra locking upon the
+standard `net.TCPConn` API, except to protect its configuration from races.
+Hence, you should always use the `TCPClient.Set*` methods *before* you
+actually start doing any I/O.
+
+
 To test the library, you can run a local TCP server with:
 
     $ ncat -l 9999 -k

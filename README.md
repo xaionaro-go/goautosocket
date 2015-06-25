@@ -5,6 +5,8 @@ The GAS library provides auto-reconnecting TCP sockets in a tiny, fully tested, 
 The `TCPClient` struct embeds a `net.TCPConn` and overrides its `Read()` and `Write()` methods, making it entirely compatible with the `net.Conn` interface and the rest of the `net` package.
 This means you should be able to use this library by just replacing `net.Dial` with `gas.Dial` in your code.
 
+GAS uses the `atomic` package to synchronize reconnections between multiple goroutines; it doesn't add any extra locking upon the standard `net.TCPConn` API, except to protect its configuration from races. Hence, you should always use the `TCPClient.Set*` methods *before* you actually start doing any I/O.
+
 ## Install
 
 ```bash
