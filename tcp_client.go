@@ -166,7 +166,7 @@ func (c *TCPClient) reconnect() error {
 	c.TCPConn = conn
 
 	// we're back online, set shared status accordingly
-	atomic.StoreInt32(&c.status, 0)
+	atomic.StoreInt32(&c.status, statusOnline)
 
 	return nil
 }
