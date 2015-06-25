@@ -148,9 +148,6 @@ func (c *TCPClient) reconnect() error {
 //
 // It will return ErrMaxRetries if the retry limit is reached.
 func (c *TCPClient) Read(b []byte) (int, error) {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-
 	disconnected := false
 
 	t := c.retryInterval
@@ -158,13 +155,11 @@ func (c *TCPClient) Read(b []byte) (int, error) {
 		if disconnected {
 			time.Sleep(t)
 			t *= 2
-			c.lock.RUnlock()
 			if err := c.reconnect(); err != nil {
 				switch e := err.(type) {
 				case *net.OpError:
 					if e.Err.(syscall.Errno) == syscall.ECONNREFUSED {
 						disconnected = true
-						c.lock.RLock()
 						continue
 					}
 					return -1, err
@@ -174,9 +169,10 @@ func (c *TCPClient) Read(b []byte) (int, error) {
 			} else {
 				disconnected = false
 			}
-			c.lock.RLock()
 		}
+		c.lock.RLock()
 		n, err := c.TCPConn.Read(b)
+		c.lock.RUnlock()
 		if err == nil {
 			return n, err
 		}
@@ -205,9 +201,6 @@ func (c *TCPClient) Read(b []byte) (int, error) {
 //
 // It will return ErrMaxRetries if the retry limit is reached.
 func (c *TCPClient) ReadFrom(r io.Reader) (int64, error) {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-
 	disconnected := false
 
 	t := c.retryInterval
@@ -215,13 +208,11 @@ func (c *TCPClient) ReadFrom(r io.Reader) (int64, error) {
 		if disconnected {
 			time.Sleep(t)
 			t *= 2
-			c.lock.RUnlock()
 			if err := c.reconnect(); err != nil {
 				switch e := err.(type) {
 				case *net.OpError:
 					if e.Err.(syscall.Errno) == syscall.ECONNREFUSED {
 						disconnected = true
-						c.lock.RLock()
 						continue
 					}
 					return -1, err
@@ -231,9 +222,10 @@ func (c *TCPClient) ReadFrom(r io.Reader) (int64, error) {
 			} else {
 				disconnected = false
 			}
-			c.lock.RLock()
 		}
+		c.lock.RLock()
 		n, err := c.TCPConn.ReadFrom(r)
+		c.lock.RUnlock()
 		if err == nil {
 			return n, err
 		}
@@ -262,9 +254,6 @@ func (c *TCPClient) ReadFrom(r io.Reader) (int64, error) {
 //
 // It will return ErrMaxRetries if the retry limit is reached.
 func (c *TCPClient) Write(b []byte) (int, error) {
-	c.lock.RLock()
-	defer c.lock.RUnlock()
-
 	disconnected := false
 
 	t := c.retryInterval
@@ -272,13 +261,11 @@ func (c *TCPClient) Write(b []byte) (int, error) {
 		if disconnected {
 			time.Sleep(t)
 			t *= 2
-			c.lock.RUnlock()
 			if err := c.reconnect(); err != nil {
 				switch e := err.(type) {
 				case *net.OpError:
 					if e.Err.(syscall.Errno) == syscall.ECONNREFUSED {
 						disconnected = true
-						c.lock.RLock()
 						continue
 					}
 					return -1, err
@@ -288,9 +275,10 @@ func (c *TCPClient) Write(b []byte) (int, error) {
 			} else {
 				disconnected = false
 			}
-			c.lock.RLock()
 		}
+		c.lock.RLock()
 		n, err := c.TCPConn.Write(b)
+		c.lock.RUnlock()
 		if err == nil {
 			return n, err
 		}
