@@ -136,6 +136,7 @@ func TestTCPClient_Write(t *testing.T) {
 			log.Println("server down")
 			time.Sleep(time.Millisecond * 100 * time.Duration(rand.Intn(10)))
 			s, err = net.Listen("tcp", addr.String())
+			log.Println(s, err)
 			if err != nil {
 				t.Error(err)
 			}
