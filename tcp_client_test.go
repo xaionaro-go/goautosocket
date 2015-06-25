@@ -74,6 +74,7 @@ func TestTCPClient_reconnect(t *testing.T) {
 	defer c.Close()
 
 	tcpConn1 := c.(*TCPClient).TCPConn
+	c.(*TCPClient).status = 1
 	if err := c.(*TCPClient).reconnect(); err != nil {
 		t.Error(err)
 	}

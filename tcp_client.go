@@ -136,21 +136,38 @@ func (c *TCPClient) GetRetryInterval() time.Duration {
 
 // reconnect builds a new TCP connection to replace the embedded *net.TCPConn.
 //
-// This function completely Lock()s the TCPClient.
-//
 // TODO: keep old socket configuration (timeout, linger...).
 func (c *TCPClient) reconnect() error {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	// set the shared status to 'reconnecting'
+	// if it's already the case, return early, something's already trying to
+	// reconnect
+	if !atomic.CompareAndSwapInt32(&c.status, statusOffline, statusReconnecting) {
+		return nil
+	}
 
 	raddr := c.TCPConn.RemoteAddr()
 	conn, err := net.DialTCP(raddr.Network(), nil, raddr.(*net.TCPAddr))
 	if err != nil {
-		return err
+		// reset shared status to offline
+		defer atomic.StoreInt32(&c.status, statusOffline)
+		switch e := err.(type) {
+		case *net.OpError:
+			if e.Err.(syscall.Errno) == syscall.ECONNREFUSED {
+				return nil
+			}
+			return err
+		default:
+			return err
+		}
 	}
 
+	// set new TCP socket
 	c.TCPConn.Close()
 	c.TCPConn = conn
+
+	// we're back online, set shared status accordingly
+	atomic.StoreInt32(&c.status, 0)
+
 	return nil
 }
 
