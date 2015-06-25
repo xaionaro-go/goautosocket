@@ -283,44 +283,36 @@ func (c *TCPClient) ReadFrom(r io.Reader) (int64, error) {
 //
 // It will return ErrMaxRetries if the retry limit is reached.
 func (c *TCPClient) Write(b []byte) (int, error) {
-	disconnected := false
+	// protect conf values (retryInterval, maxRetries...)
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 
-	t := c.retryInterval
 	for i := 0; i < c.maxRetries; i++ {
-		if disconnected {
-			time.Sleep(t)
-			t *= 2
-			if err := c.reconnect(); err != nil {
-				switch e := err.(type) {
-				case *net.OpError:
-					if e.Err.(syscall.Errno) == syscall.ECONNREFUSED {
-						disconnected = true
-						continue
-					}
-					return -1, err
-				default:
-					return -1, err
-				}
-			} else {
-				disconnected = false
-			}
-		}
-		c.lock.RLock()
-		n, err := c.TCPConn.Write(b)
-		c.lock.RUnlock()
-		if err == nil {
-			return n, err
-		}
-		switch e := err.(type) {
-		case *net.OpError:
-			if e.Err.(syscall.Errno) == syscall.ECONNRESET ||
-				e.Err.(syscall.Errno) == syscall.EPIPE {
-				disconnected = true
-			} else {
+		if atomic.LoadInt32(&c.status) == statusOnline {
+			n, err := c.TCPConn.Write(b)
+			if err == nil {
 				return n, err
 			}
-		default:
-			return n, err
+			switch e := err.(type) {
+			case *net.OpError:
+				if e.Err.(syscall.Errno) == syscall.ECONNRESET ||
+					e.Err.(syscall.Errno) == syscall.EPIPE {
+					atomic.StoreInt32(&c.status, statusOffline)
+				} else {
+					return n, err
+				}
+			default:
+				return n, err
+			}
+		} else if atomic.LoadInt32(&c.status) == statusOffline {
+			if err := c.reconnect(); err != nil {
+				return -1, err
+			}
+		}
+
+		// exponential backoff
+		if i < (c.maxRetries - 1) {
+			time.Sleep(c.retryInterval * time.Duration(2^(i)))
 		}
 	}
 
