@@ -9,8 +9,18 @@ import (
 	"io"
 	"net"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
+)
+
+// ----------------------------------------------------------------------------
+
+// status enum
+const (
+	statusOnline       = iota
+	statusOffline      = iota
+	statusReconnecting = iota
 )
 
 // ----------------------------------------------------------------------------
@@ -26,7 +36,8 @@ import (
 type TCPClient struct {
 	*net.TCPConn
 
-	lock sync.RWMutex
+	lock   sync.RWMutex
+	status int32
 
 	maxRetries    int
 	retryInterval time.Duration
@@ -63,7 +74,8 @@ func DialTCP(network string, laddr, raddr *net.TCPAddr) (*TCPClient, error) {
 	return &TCPClient{
 		TCPConn: conn,
 
-		lock: sync.RWMutex{},
+		lock:   sync.RWMutex{},
+		status: 0,
 
 		maxRetries:    10,
 		retryInterval: 10 * time.Millisecond,
