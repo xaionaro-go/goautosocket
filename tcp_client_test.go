@@ -134,11 +134,10 @@ func TestTCPClient_Write(t *testing.T) {
 				t.Error(err)
 			}
 			log.Println("server down")
-			time.Sleep(time.Millisecond * 100 * time.Duration(rand.Intn(10)))
-			s, err = net.Listen("tcp", addr.String())
-			log.Println(s, err)
-			if err != nil {
-				t.Error(err)
+			s = nil
+			for s == nil {
+				time.Sleep(time.Millisecond * 100 * time.Duration(rand.Intn(10)))
+				s, err = net.Listen("tcp", addr.String())
 			}
 		}
 	}()
@@ -215,10 +214,10 @@ func TestTCPClient_Read(t *testing.T) {
 				t.Error(err)
 			}
 			log.Println("server down")
-			time.Sleep(time.Millisecond * 100 * time.Duration(rand.Intn(10)))
-			s, err = net.Listen("tcp", addr.String())
-			if err != nil {
-				t.Error(err)
+			s = nil
+			for s == nil {
+				time.Sleep(time.Millisecond * 100 * time.Duration(rand.Intn(10)))
+				s, err = net.Listen("tcp", addr.String())
 			}
 		}
 	}()
