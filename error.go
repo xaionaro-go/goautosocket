@@ -23,7 +23,7 @@ const (
 // Error returns the error as a string.
 func (e Error) Error() string {
 	switch e {
-	case 0x01:
+	case ErrMaxRetries:
 		return "ErrMaxRetries"
 	default:
 		return "unknown error"
