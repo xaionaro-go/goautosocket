@@ -7,6 +7,7 @@ package gas
 
 import (
 	"io"
+	"math"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -210,7 +211,7 @@ func (c *TCPClient) Read(b []byte) (int, error) {
 
 		// exponential backoff
 		if i < (c.maxRetries - 1) {
-			time.Sleep(c.retryInterval * time.Duration(2^(i)))
+			time.Sleep(c.retryInterval * time.Duration(math.Pow(2, float64(i))))
 		}
 	}
 
@@ -254,7 +255,7 @@ func (c *TCPClient) ReadFrom(r io.Reader) (int64, error) {
 
 		// exponential backoff
 		if i < (c.maxRetries - 1) {
-			time.Sleep(c.retryInterval * time.Duration(2^(i)))
+			time.Sleep(c.retryInterval * time.Duration(math.Pow(2, float64(i))))
 		}
 	}
 
@@ -294,7 +295,7 @@ func (c *TCPClient) Write(b []byte) (int, error) {
 
 		// exponential backoff
 		if i < (c.maxRetries - 1) {
-			time.Sleep(c.retryInterval * time.Duration(2^(i)))
+			time.Sleep(c.retryInterval * time.Duration(math.Pow(2, float64(i))))
 		}
 	}
 

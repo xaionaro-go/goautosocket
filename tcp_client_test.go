@@ -117,7 +117,7 @@ func TestTCPClient_Write(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		c.(*TCPClient).SetMaxRetries(30)
+		c.(*TCPClient).SetMaxRetries(5)
 		c.(*TCPClient).SetRetryInterval(10 * time.Millisecond)
 		defer c.Close()
 		clients[i] = c
@@ -199,7 +199,7 @@ func TestTCPClient_Read(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		c.(*TCPClient).SetMaxRetries(30)
+		c.(*TCPClient).SetMaxRetries(5)
 		c.(*TCPClient).SetRetryInterval(10 * time.Millisecond)
 		defer c.Close()
 		clients[i] = c
