@@ -9,6 +9,7 @@ import (
 	"io"
 	"math"
 	"net"
+	"os"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -153,10 +154,22 @@ func (c *TCPClient) reconnect() error {
 		defer atomic.StoreInt32(&c.status, statusOffline)
 		switch e := err.(type) {
 		case *net.OpError:
-			if e.Err.(syscall.Errno) == syscall.ECONNREFUSED {
-				return nil
+			switch e2 := e.Err.(type) {
+			case syscall.Errno:
+				if e2 == syscall.ECONNREFUSED {
+					return nil
+				} else {
+					return err
+				}
+			case *os.SyscallError:
+				if e3, ok := e2.Err.(syscall.Errno); ok && e3 == syscall.ECONNREFUSED {
+					return nil
+				} else {
+					return err
+				}
+			default:
+				return err
 			}
-			return err
 		default:
 			return err
 		}
@@ -190,10 +203,20 @@ func (c *TCPClient) Read(b []byte) (int, error) {
 			}
 			switch e := err.(type) {
 			case *net.OpError:
-				if e.Err.(syscall.Errno) == syscall.ECONNRESET ||
-					e.Err.(syscall.Errno) == syscall.EPIPE {
-					atomic.StoreInt32(&c.status, statusOffline)
-				} else {
+				switch e2 := e.Err.(type) {
+				case syscall.Errno:
+					if e2 == syscall.ECONNRESET || e2 == syscall.EPIPE {
+						atomic.StoreInt32(&c.status, statusOffline)
+					} else {
+						return n, err
+					}
+				case *os.SyscallError:
+					if e3, ok := e2.Err.(syscall.Errno); ok && e3 == syscall.ECONNRESET || e3 == syscall.EPIPE {
+						atomic.StoreInt32(&c.status, statusOffline)
+					} else {
+						return n, err
+					}
+				default:
 					return n, err
 				}
 			default:
@@ -234,10 +257,20 @@ func (c *TCPClient) ReadFrom(r io.Reader) (int64, error) {
 			}
 			switch e := err.(type) {
 			case *net.OpError:
-				if e.Err.(syscall.Errno) == syscall.ECONNRESET ||
-					e.Err.(syscall.Errno) == syscall.EPIPE {
-					atomic.StoreInt32(&c.status, statusOffline)
-				} else {
+				switch e2 := e.Err.(type) {
+				case syscall.Errno:
+					if e2 == syscall.ECONNRESET || e2 == syscall.EPIPE {
+						atomic.StoreInt32(&c.status, statusOffline)
+					} else {
+						return n, err
+					}
+				case *os.SyscallError:
+					if e3, ok := e2.Err.(syscall.Errno); ok && e3 == syscall.ECONNRESET || e3 == syscall.EPIPE {
+						atomic.StoreInt32(&c.status, statusOffline)
+					} else {
+						return n, err
+					}
+				default:
 					return n, err
 				}
 			default:
@@ -278,10 +311,20 @@ func (c *TCPClient) Write(b []byte) (int, error) {
 			}
 			switch e := err.(type) {
 			case *net.OpError:
-				if e.Err.(syscall.Errno) == syscall.ECONNRESET ||
-					e.Err.(syscall.Errno) == syscall.EPIPE {
-					atomic.StoreInt32(&c.status, statusOffline)
-				} else {
+				switch e2 := e.Err.(type) {
+				case syscall.Errno:
+					if e2 == syscall.ECONNRESET || e2 == syscall.EPIPE {
+						atomic.StoreInt32(&c.status, statusOffline)
+					} else {
+						return n, err
+					}
+				case *os.SyscallError:
+					if e3, ok := e2.Err.(syscall.Errno); ok && e3 == syscall.ECONNRESET || e3 == syscall.EPIPE {
+						atomic.StoreInt32(&c.status, statusOffline)
+					} else {
+						return n, err
+					}
+				default:
 					return n, err
 				}
 			default:
