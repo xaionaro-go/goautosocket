@@ -156,13 +156,13 @@ func (c *TCPClient) reconnect() error {
 		case *net.OpError:
 			switch e2 := e.Err.(type) {
 			case syscall.Errno:
-				if e2 == syscall.ECONNREFUSED {
+				if isConnRefusedError(e2) {
 					return nil
 				} else {
 					return err
 				}
 			case *os.SyscallError:
-				if e3, ok := e2.Err.(syscall.Errno); ok && e3 == syscall.ECONNREFUSED {
+				if e3, ok := e2.Err.(syscall.Errno); ok && isConnRefusedError(e3) {
 					return nil
 				} else {
 					return err
@@ -205,13 +205,13 @@ func (c *TCPClient) Read(b []byte) (int, error) {
 			case *net.OpError:
 				switch e2 := e.Err.(type) {
 				case syscall.Errno:
-					if e2 == syscall.ECONNRESET || e2 == syscall.EPIPE {
+					if isConnResetError(e2) {
 						atomic.StoreInt32(&c.status, statusOffline)
 					} else {
 						return n, err
 					}
 				case *os.SyscallError:
-					if e3, ok := e2.Err.(syscall.Errno); ok && e3 == syscall.ECONNRESET || e3 == syscall.EPIPE {
+					if e3, ok := e2.Err.(syscall.Errno); ok && isConnResetError(e3) {
 						atomic.StoreInt32(&c.status, statusOffline)
 					} else {
 						return n, err
@@ -259,13 +259,13 @@ func (c *TCPClient) ReadFrom(r io.Reader) (int64, error) {
 			case *net.OpError:
 				switch e2 := e.Err.(type) {
 				case syscall.Errno:
-					if e2 == syscall.ECONNRESET || e2 == syscall.EPIPE {
+					if isConnResetError(e2) {
 						atomic.StoreInt32(&c.status, statusOffline)
 					} else {
 						return n, err
 					}
 				case *os.SyscallError:
-					if e3, ok := e2.Err.(syscall.Errno); ok && e3 == syscall.ECONNRESET || e3 == syscall.EPIPE {
+					if e3, ok := e2.Err.(syscall.Errno); ok && isConnResetError(e3) {
 						atomic.StoreInt32(&c.status, statusOffline)
 					} else {
 						return n, err
@@ -313,13 +313,13 @@ func (c *TCPClient) Write(b []byte) (int, error) {
 			case *net.OpError:
 				switch e2 := e.Err.(type) {
 				case syscall.Errno:
-					if e2 == syscall.ECONNRESET || e2 == syscall.EPIPE {
+					if isConnResetError(e2) {
 						atomic.StoreInt32(&c.status, statusOffline)
 					} else {
 						return n, err
 					}
 				case *os.SyscallError:
-					if e3, ok := e2.Err.(syscall.Errno); ok && e3 == syscall.ECONNRESET || e3 == syscall.EPIPE {
+					if e3, ok := e2.Err.(syscall.Errno); ok && isConnResetError(e3) {
 						atomic.StoreInt32(&c.status, statusOffline)
 					} else {
 						return n, err
