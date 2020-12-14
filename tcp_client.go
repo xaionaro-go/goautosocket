@@ -337,7 +337,7 @@ func (c *TCPClient) Write(b []byte) (int, error) {
 		}
 
 		// exponential backoff
-		if i < (c.maxRetries - 1) {
+		if i < (c.maxRetries - 1) && atomic.LoadInt32(&c.status) == statusOffline {
 			time.Sleep(c.retryInterval * time.Duration(math.Pow(2, float64(i))))
 		}
 	}
