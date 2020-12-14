@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -75,7 +76,7 @@ func TestTCPClient_reconnect(t *testing.T) {
 	defer c.Close()
 
 	tcpConn1 := c.(*TCPClient).TCPConn
-	c.(*TCPClient).status = 1
+	c.(*TCPClient).status = statusOffline
 	if err := c.(*TCPClient).reconnect(); err != nil {
 		t.Error(err)
 	}
@@ -86,7 +87,7 @@ func TestTCPClient_reconnect(t *testing.T) {
 
 	if err := tcpConn1.Close(); err == nil {
 		t.Error("tcpConn1 should already be closed")
-	} else if err.Error() != "use of closed network connection" {
+	} else if !strings.Contains(err.Error(), "use of closed network connection") {
 		t.Error(err)
 	}
 	if err := tcpConn2.Close(); err != nil {
