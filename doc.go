@@ -31,7 +31,7 @@ and run this code:
 	    "log"
 	    "time"
 
-	    "github.com/teh-cmc/goautosocket"
+	    "github.com/xaionaro-go/goautosocket"
 	)
 
 	func main() {

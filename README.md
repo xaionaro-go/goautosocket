@@ -1,4 +1,4 @@
-# GoAutoSocket (GAS) ![Status](https://img.shields.io/badge/status-stable-green.svg?style=plastic) [![Build Status](http://img.shields.io/travis/teh-cmc/goautosocket.svg?style=plastic)](https://travis-ci.org/teh-cmc/goautosocket) [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=plastic)](http://godoc.org/github.com/teh-cmc/goautosocket)
+# GoAutoSocket (GAS) ![Status](https://img.shields.io/badge/status-stable-green.svg?style=plastic) [![Build Status](http://img.shields.io/travis/xaionaro-go/goautosocket.svg?style=plastic)](https://travis-ci.org/xaionaro-go/goautosocket) [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=plastic)](http://godoc.org/github.com/xaionaro-go/goautosocket)
 
 The GAS library provides auto-reconnecting TCP sockets in a tiny, fully tested, thread-safe API.
 
@@ -10,7 +10,7 @@ GAS uses the `atomic` package to synchronize reconnections between multiple goro
 ## Install
 
 ```bash
-go get -u github.com/teh-cmc/goautosocket
+go get -u github.com/xaionaro-go/goautosocket
 ```
 
 ## Usage
@@ -28,7 +28,7 @@ import (
     "log"
     "time"
 
-    "github.com/teh-cmc/goautosocket"
+    "github.com/xaionaro-go/goautosocket"
 )
 
 func main() {
@@ -72,7 +72,7 @@ import (
     "sync"
     "time"
 
-    "github.com/teh-cmc/goautosocket"
+    "github.com/xaionaro-go/goautosocket"
 )
 
 func main() {
@@ -146,7 +146,7 @@ func main() {
 }
 ```
 
-You can also find an example with concurrency [here](https://github.com/teh-cmc/goautosocket/blob/master/tcp_client_test.go#L97).
+You can also find an example with concurrency [here](https://github.com/xaionaro-go/goautosocket/blob/master/tcp_client_test.go#L97).
 
 ## Disclaimer
 
@@ -155,7 +155,7 @@ This was built with my needs in mind, no more, no less. That is, I needed a simp
 - on the other end, a TCP server that I have no control over (hence the main reason why UDP is out of the question) and which might be rebooted at anytime
 I also needed the ability to give up on sending a message after an abritrary amount of tries/time (i.e., ERR_MAX_TRIES). Pretty straightforward stuff.
 
-Basically, my use case is [this situation](https://github.com/teh-cmc/goautosocket/blob/master/tcp_client_test.go#L97).
+Basically, my use case is [this situation](https://github.com/xaionaro-go/goautosocket/blob/master/tcp_client_test.go#L97).
 
 Surprisingly, I couldn't find such a library (I guess I either didn't look in the right place, or just not hard enough..? oh well); so here it is.
 Do not hesitate to send a pull request if this doesn't cover all your needs (and it probably won't), they are more than welcome.
