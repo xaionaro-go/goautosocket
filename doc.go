@@ -19,45 +19,44 @@ standard `net.TCPConn` API, except to protect its configuration from races.
 Hence, you should always use the `TCPClient.Set*` methods *before* you
 actually start doing any I/O.
 
-
 To test the library, you can run a local TCP server with:
 
-    $ ncat -l 9999 -k
+	$ ncat -l 9999 -k
 
 and run this code:
 
-    package main
+	package main
 
-    import (
-        "log"
-        "time"
+	import (
+	    "log"
+	    "time"
 
-        "github.com/teh-cmc/goautosocket"
-    )
+	    "github.com/teh-cmc/goautosocket"
+	)
 
-    func main() {
-        // connect to a TCP server
-        conn, err := gas.Dial("tcp", "localhost:9999")
-        if err != nil {
-            log.Fatal(err)
-        }
+	func main() {
+	    // connect to a TCP server
+	    conn, err := gas.Dial("tcp", "localhost:9999")
+	    if err != nil {
+	        log.Fatal(err)
+	    }
 
-        // client sends "hello, world!" to the server every second
-        for {
-            _, err := conn.Write([]byte("hello, world!\n"))
-            if err != nil {
-                // if the client reached its retry limit, give up
-                if err == gas.ErrMaxRetries {
-                    log.Println("client gave up, reached retry limit")
-                    return
-                }
-                // not a GAS error, just panic
-                log.Fatal(err)
-            }
-            log.Println("client says hello!")
-            time.Sleep(time.Second)
-        }
-    }
+	    // client sends "hello, world!" to the server every second
+	    for {
+	        _, err := conn.Write([]byte("hello, world!\n"))
+	        if err != nil {
+	            // if the client reached its retry limit, give up
+	            if err == gas.ErrMaxRetries {
+	                log.Println("client gave up, reached retry limit")
+	                return
+	            }
+	            // not a GAS error, just panic
+	            log.Fatal(err)
+	        }
+	        log.Println("client says hello!")
+	        time.Sleep(time.Second)
+	    }
+	}
 
 Then try to kill and reboot your server, the client will automatically reconnect and start sending messages again; unless it has reached its retry limit.
 */
